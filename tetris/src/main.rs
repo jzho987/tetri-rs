@@ -20,28 +20,34 @@ fn main() {
     // init
     let mut grid: Vec<Vec<usize>> = vec![vec![0; 10]; 20];
     let mut stdout = stdout();
-    let mut cur_blocks = vec![(0, 1), (0, 2), (0, 3), (1, 2)];
+    let mut cur_tetris = vec![(0, 1), (0, 2), (0, 3), (1, 2)];
     let mut cur_tetris_type = 1;
     let duration = Duration::from_millis(20);
+    let fall_speed = Duration::from_secs(1);
+    let mut fall_counter = fall_speed.clone();
 
     enable_raw_mode().unwrap();
 
     loop {
-        let mut render_grid = grid.clone();
-        for pos in &cur_blocks {
-            *render_grid.get_mut(pos.0).unwrap().get_mut(pos.1).unwrap() = cur_tetris_type;
-        }
-
-        for item in render_grid.iter().enumerate() {
-            let mut line_unjoined: Vec<String> = vec![];
-            for cell in item.1.iter() {
-                line_unjoined.push(get_cell(cell));
+        // render current grid state;
+        {
+            execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0)).unwrap();
+            let mut rendering_grid = grid.clone();
+            for pos in &cur_tetris {
+                *rendering_grid.get_mut(pos.0).unwrap().get_mut(pos.1).unwrap() = cur_tetris_type;
             }
-            let line = line_unjoined.join("");
-            execute!(stdout, cursor::MoveTo(0, item.0 as u16), Print(line)).unwrap();
+            for (index, row) in rendering_grid.iter().enumerate() {
+                let mut row_string_vec: Vec<String> = vec![];
+                for cell in row.iter() {
+                    row_string_vec.push(get_cell(cell));
+                }
+                let row_string = row_string_vec.join("");
+                execute!(stdout, cursor::MoveTo(0, index as u16), Print(row_string)).unwrap();
+            }
         }
 
         let mut shift = (-1_i32, 0_i32);
+        // get io and wait;
         if poll(duration).unwrap() {
             match read().unwrap() {
                 Event::Key(KeyEvent {
@@ -65,19 +71,17 @@ fn main() {
                 _ => (),
             }
         };
-        
-        let new_blocks = move_tetris(&cur_blocks, &grid, &shift);
-        if cur_blocks == new_blocks {
-            for pos in &cur_blocks {
+        // apply move
+        let new_tetris = move_tetris(&cur_tetris, &grid, &shift);
+        if cur_tetris == new_tetris {
+            for pos in &cur_tetris {
                 *grid.get_mut(pos.0).unwrap().get_mut(pos.1).unwrap() = cur_tetris_type;
             }
-            cur_blocks = vec![(0, 1), (0, 2), (0, 3), (1, 2)];
+            cur_tetris = vec![(0, 1), (0, 2), (0, 3), (1, 2)];
         } else {
-            cur_blocks = new_blocks;
+            cur_tetris = new_tetris;
         }
-
         std::thread::sleep(duration);
-        execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0)).unwrap();
     }
     
     disable_raw_mode().unwrap();
