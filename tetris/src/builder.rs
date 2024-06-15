@@ -3,6 +3,40 @@ pub mod tetris {
         pub poses: Vec<(usize, usize)>,
         pub color: i32,
     }
+
+    impl Tetris {
+        pub fn move_tetris(&mut self, grid: &Vec<Vec<usize>>, direction: &(i32, i32)) -> bool {
+            if *direction == (0, 0) {
+                return true
+            }
+
+            let mut new_poses = vec![];
+            let num_cols = grid.get(0).unwrap().len() as i32;
+            let num_rows = grid.len() as i32;
+            for (row, col) in &self.poses {
+                let new_col = *col as i32 - direction.1;
+                let new_row = *row as i32 - direction.0;
+
+                if new_col < 0 || new_col >= num_cols {
+                    return true
+                }
+                if new_row < 0 || new_row >= num_rows {
+                    return false
+                }
+                if *grid
+                    .get(new_row as usize).unwrap()
+                    .get(new_col as usize).unwrap()
+                    != 0 as usize {
+                    return false
+                }
+
+                new_poses.push((new_row as usize, new_col as usize));
+            }
+
+            self.poses = new_poses;
+            return true
+        }
+    }
 }
 
 pub mod build {
@@ -32,7 +66,7 @@ pub mod build {
             (origin_row, origin_col + 1), 
             (origin_row + 1, origin_col), 
             (origin_row + 1, origin_col + 1), 
-            (origin_row + 1, origin_col + 1),
+            (origin_row + 1, origin_col + 2),
             ];
 
         Tetris {

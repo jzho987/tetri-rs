@@ -78,18 +78,12 @@ fn main() {
             }
         };
         // apply move
-        let new_poses = move_tetris(&cur_tetris.poses, &grid, &shift);
-        if cur_tetris.poses == new_poses {
-            for pos in &cur_tetris.poses {
-                *grid.get_mut(pos.0).unwrap().get_mut(pos.1).unwrap() = cur_tetris.color as usize;
-            }
+        if !cur_tetris.move_tetris(&grid, &shift) {
             cur_tetris = build::build_square_tetris(0, 0);
-        } else {
-            cur_tetris.poses = new_poses;
         }
         std::thread::sleep(duration);
     }
-    
+
     disable_raw_mode().unwrap();
 }
 
@@ -105,35 +99,3 @@ fn get_cell(cell: &usize) -> String {
     }
 }
 
-fn move_tetris(blocks: &Vec<(usize, usize)>, grid: &Vec<Vec<usize>>, direction: &(i32, i32)) -> Vec<(usize, usize)> {
-    let mut after_position = vec![];
-    let col_count = grid.get(0).unwrap().len() as i32;
-    let row_count = grid.len() as i32;
-    for pos in blocks {
-        let after_col = pos.1 as i32 - direction.1;
-        let after_row = pos.0 as i32 - direction.0;
-
-        if after_col < 0 || after_col >= col_count {
-            after_position = blocks.clone();
-            break;
-        }
-
-        if after_row < 0 || after_row >= row_count {
-            after_position = blocks.clone();
-            break;
-        }
-
-        if *grid
-            .get(after_row as usize).unwrap()
-            .get(after_col as usize).unwrap()
-            != 0 as usize {
-            
-            after_position = blocks.clone();
-            break;
-        }
-
-        after_position.push((after_row as usize, after_col as usize))
-    }
-
-    return after_position;
-}
