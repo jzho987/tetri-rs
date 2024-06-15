@@ -25,9 +25,15 @@ pub mod tetris {
                 }
                 if *grid
                     .get(new_row as usize).unwrap()
-                    .get(new_col as usize).unwrap()
+                    .get(*col).unwrap()
                     != 0 as usize {
                     return false
+                }
+                if *grid
+                    .get(new_row as usize).unwrap()
+                    .get(new_col as usize).unwrap()
+                    != 0 as usize {
+                    return true
                 }
 
                 new_poses.push((new_row as usize, new_col as usize));

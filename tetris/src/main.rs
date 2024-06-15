@@ -14,7 +14,6 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType};
 use std::io::stdout;
 
 mod builder;
-use crate::builder::tetris::Tetris;
 use crate::builder::build;
 
 fn main() {
@@ -77,8 +76,10 @@ fn main() {
                 _ => (),
             }
         };
-        // apply move
         if !cur_tetris.move_tetris(&grid, &shift) {
+            for (row, col) in cur_tetris.poses {
+                *grid.get_mut(row).unwrap().get_mut(col).unwrap() = cur_tetris.color as usize;
+            }
             cur_tetris = build::build_square_tetris(0, 0);
         }
         std::thread::sleep(duration);
