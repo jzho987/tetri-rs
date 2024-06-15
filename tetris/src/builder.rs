@@ -1,7 +1,7 @@
 pub mod tetris {
     pub struct Tetris {
         pub poses: Vec<(usize, usize)>,
-        pub color: i32,
+        pub color: usize,
     }
 
     impl Tetris {
