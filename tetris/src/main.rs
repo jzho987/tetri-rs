@@ -1,11 +1,8 @@
 extern crate colored;
 use colored::Colorize;
 
-use std::env::current_exe;
 use std::time::Duration;
-use std::io;
 extern crate futures_timer;
-use futures_timer::Delay;
 
 #[macro_use]
 extern crate crossterm;
@@ -14,14 +11,17 @@ use crossterm::cursor;
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers, KeyEventKind, KeyEventState};
 use crossterm::style::Print;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType};
-use std::io::{stdout, Write};
+use std::io::stdout;
+
+mod builder;
+use crate::builder::tetris::Tetris;
+use crate::builder::build;
 
 fn main() {
     // init
     let mut grid: Vec<Vec<usize>> = vec![vec![0; 10]; 20];
     let mut stdout = stdout();
-    let mut cur_tetris = vec![(0, 1), (0, 2), (0, 3), (1, 2)];
-    let mut cur_tetris_type = 1;
+    let mut cur_tetris = build::build_tee_tetris(0, 0);
     let duration = Duration::from_millis(20);
     let fall_speed = Duration::from_secs(1);
     let mut fall_counter = fall_speed.clone();
@@ -33,8 +33,8 @@ fn main() {
         {
             execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0)).unwrap();
             let mut rendering_grid = grid.clone();
-            for pos in &cur_tetris {
-                *rendering_grid.get_mut(pos.0).unwrap().get_mut(pos.1).unwrap() = cur_tetris_type;
+            for pos in &cur_tetris.poses {
+                *rendering_grid.get_mut(pos.0).unwrap().get_mut(pos.1).unwrap() = cur_tetris.color as usize;
             }
             for (index, row) in rendering_grid.iter().enumerate() {
                 let mut row_string_vec: Vec<String> = vec![];
@@ -46,7 +46,7 @@ fn main() {
             }
         }
 
-        let mut shift = (-1_i32, 0_i32);
+        let mut shift = (0_i32, 0_i32);
         // get io and wait;
         if poll(duration).unwrap() {
             match read().unwrap() {
@@ -63,6 +63,12 @@ fn main() {
                     state: KeyEventState::NONE,
                 }) => shift.1 = -1,
                 Event::Key(KeyEvent {
+                    code: KeyCode::Char('j'),
+                    modifiers: KeyModifiers::NONE,
+                    kind: KeyEventKind::Press,
+                    state: KeyEventState::NONE,
+                }) => shift.0 = -1,
+                Event::Key(KeyEvent {
                     code: KeyCode::Char('q'),
                     modifiers: KeyModifiers::CONTROL,
                     kind: KeyEventKind::Press,
@@ -72,14 +78,14 @@ fn main() {
             }
         };
         // apply move
-        let new_tetris = move_tetris(&cur_tetris, &grid, &shift);
-        if cur_tetris == new_tetris {
-            for pos in &cur_tetris {
-                *grid.get_mut(pos.0).unwrap().get_mut(pos.1).unwrap() = cur_tetris_type;
+        let new_poses = move_tetris(&cur_tetris.poses, &grid, &shift);
+        if cur_tetris.poses == new_poses {
+            for pos in &cur_tetris.poses {
+                *grid.get_mut(pos.0).unwrap().get_mut(pos.1).unwrap() = cur_tetris.color as usize;
             }
-            cur_tetris = vec![(0, 1), (0, 2), (0, 3), (1, 2)];
+            cur_tetris = build::build_square_tetris(0, 0);
         } else {
-            cur_tetris = new_tetris;
+            cur_tetris.poses = new_poses;
         }
         std::thread::sleep(duration);
     }
