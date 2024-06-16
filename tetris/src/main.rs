@@ -51,6 +51,7 @@ fn main() {
         }
 
         let mut shift = (0_i32, 0_i32);
+        let mut drop = false;
         // step drop;
         drop_timer -= frame_time_millis;
         if drop_timer <= 0 {
@@ -79,6 +80,12 @@ fn main() {
                     state: KeyEventState::NONE,
                 }) => shift.0 = -1,
                 Event::Key(KeyEvent {
+                    code: KeyCode::Char(' '),
+                    modifiers: KeyModifiers::NONE,
+                    kind: KeyEventKind::Press,
+                    state: KeyEventState::NONE,
+                }) => drop = true,
+                Event::Key(KeyEvent {
                     code: KeyCode::Char('q'),
                     modifiers: KeyModifiers::NONE,
                     kind: KeyEventKind::Press,
@@ -87,7 +94,11 @@ fn main() {
                 _ => (),
             }
         };
-        if !cur_tetris.move_tetris(&grid.grid_vec, &shift) {
+        if drop {
+            cur_tetris.drop_tetris(&grid.grid_vec);
+            grid.apply_tetris(&cur_tetris);
+        }
+        else if !cur_tetris.move_tetris(&grid.grid_vec, &shift) {
             grid.apply_tetris(&cur_tetris);
             cur_tetris = build::build_square_tetris(0, 0);
         }

@@ -1,4 +1,6 @@
 pub mod tetris {
+    use std::collections::HashMap;
+
     pub struct Tetris {
         pub poses: Vec<(usize, usize)>,
         pub color: usize,
@@ -41,6 +43,10 @@ pub mod tetris {
 
             self.poses = new_poses;
             return true
+        }
+
+        pub fn drop_tetris(&mut self, grid: &Vec<Vec<usize>>) {
+            while self.move_tetris(grid, &(-1, 0)) {}
         }
     }
 }
