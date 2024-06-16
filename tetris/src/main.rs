@@ -25,9 +25,9 @@ fn main() {
         grid_vec: vec![vec![0; 10]; 20],
     };
     let mut stdout = stdout();
-    let mut cur_tetris = build::build_square_tetris(0, 0);
-    let mut next_tetris = build::build_zee_tetris(0, 0);
-    let mut saved_tetri: Option<Tetris> = Some(build::build_tee_tetris(0, 0));
+    let mut cur_tetris = build::build_random_tetris(0, 0);
+    let mut next_tetris = build::build_random_tetris(0, 0);
+    let mut saved_tetri: Option<Tetris> = Some(build::build_random_tetris(0, 0));
     let frame_time_millis = 10;
     let duration = Duration::from_millis(frame_time_millis as u64);
     let mut drop_timer = 0;
@@ -133,12 +133,12 @@ fn main() {
             cur_tetris.drop_tetris(&grid.grid_vec);
             grid.apply_tetris(&cur_tetris);
             cur_tetris = next_tetris;
-            next_tetris = build::build_zee_tetris(0, 0);
+            next_tetris = build::build_random_tetris(0, 0);
         }
         else if !cur_tetris.move_tetris(&grid.grid_vec, &shift) {
             grid.apply_tetris(&cur_tetris);
             cur_tetris = next_tetris;
-            next_tetris = build::build_tee_tetris(0, 0);
+            next_tetris = build::build_random_tetris(0, 0);
         }
         std::thread::sleep(duration);
     }
@@ -149,12 +149,17 @@ fn main() {
 fn get_cell(cell: &usize) -> String {
     let cell_uncolored = "██";
     match cell {
+        // background
         0 => return format!("{}", cell_uncolored.white()),
+        3 => return format!("{}", cell_uncolored.blue()),
+
+        // tetris
         1 => return format!("{}", cell_uncolored.red()),
         2 => return format!("{}", cell_uncolored.green()),
-        3 => return format!("{}", cell_uncolored.blue()),
         4 => return format!("{}", cell_uncolored.purple()),
+        5 => return format!("{}", cell_uncolored.cyan()),
+        6 => return format!("{}", cell_uncolored.bright_blue()),
+        
         _ => return format!("{}", cell_uncolored.white()),
     }
 }
-

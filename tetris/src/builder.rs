@@ -53,10 +53,26 @@ pub mod tetris {
 
 pub mod build {
     use crate::builder::tetris::Tetris;
+    use rand::{prelude, Rng};
+
+    pub fn build_random_tetris(origin_row: usize, origin_col: usize) -> Tetris {
+        let mut rng = rand::thread_rng();
+        let rand_num: f64 = rng.gen();
+        let rand_num_i = (rand_num * 4.99) as i32;
+        match rand_num_i {
+            0 => build_square_tetris(origin_row, origin_col),
+            1 => build_tee_tetris(origin_row, origin_col),
+            2 => build_zaa_tetris(origin_row, origin_col),
+            3 => build_zee_tetris(origin_row, origin_col),
+            4 => build_long_tetris(origin_row, origin_col),
+            _ => build_zee_tetris(origin_row, origin_col),
+        }
+    }
+
     // origin is top left corner.
     // >[X], [X]
     //  [X], [X]
-    pub fn build_square_tetris(origin_row: usize, origin_col: usize) -> Tetris {
+    fn build_square_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
             (origin_row, origin_col), 
             (origin_row + 1, origin_col), 
@@ -71,12 +87,46 @@ pub mod build {
     }
 
     // origin is top left corner, which is empty.
-    // >[O], [X], [ ]
+    // >[ ], [X], [ ]
     //  [X], [X], [X]
-    pub fn build_tee_tetris(origin_row: usize, origin_col: usize) -> Tetris {
+    fn build_tee_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
             (origin_row, origin_col + 1), 
             (origin_row + 1, origin_col), 
+            (origin_row + 1, origin_col + 1), 
+            (origin_row + 1, origin_col + 2),
+            ];
+
+        Tetris {
+            poses: poses,
+            color: 2,
+        }
+    }
+
+    // origin is top left corner, which is empty.
+    // >[ ], [X], [X]
+    //  [X], [X], [ ]
+    fn build_zee_tetris(origin_row: usize, origin_col: usize) -> Tetris {
+        let poses = vec![
+            (origin_row, origin_col + 1), 
+            (origin_row, origin_col + 2),
+            (origin_row + 1, origin_col), 
+            (origin_row + 1, origin_col + 1), 
+            ];
+
+        Tetris {
+            poses: poses,
+            color: 5,
+        }
+    }
+
+    // origin is top left corner, which is empty.
+    // >[X], [X], [ ]
+    //  [ ], [X], [X]
+    fn build_zaa_tetris(origin_row: usize, origin_col: usize) -> Tetris {
+        let poses = vec![
+            (origin_row, origin_col), 
+            (origin_row, origin_col + 1), 
             (origin_row + 1, origin_col + 1), 
             (origin_row + 1, origin_col + 2),
             ];
@@ -88,19 +138,19 @@ pub mod build {
     }
 
     // origin is top left corner, which is empty.
-    // >[O], [X], [X]
-    //  [X], [X], [ ]
-    pub fn build_zee_tetris(origin_row: usize, origin_col: usize) -> Tetris {
+    // >[X], [X], [X], [X]
+    //  [ ], [ ], [ ], [ ]
+    fn build_long_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
+            (origin_row, origin_col), 
             (origin_row, origin_col + 1), 
-            (origin_row, origin_col + 2),
-            (origin_row + 1, origin_col), 
-            (origin_row + 1, origin_col + 1), 
+            (origin_row, origin_col + 2), 
+            (origin_row, origin_col + 3), 
             ];
 
         Tetris {
             poses: poses,
-            color: 4,
+            color: 6,
         }
     }
 }
