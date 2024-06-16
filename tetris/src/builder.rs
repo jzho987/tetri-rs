@@ -86,4 +86,21 @@ pub mod build {
             color: 4,
         }
     }
+
+    // origin is top left corner, which is empty.
+    // >[O], [X], [X]
+    //  [X], [X], [ ]
+    pub fn build_zee_tetris(origin_row: usize, origin_col: usize) -> Tetris {
+        let poses = vec![
+            (origin_row, origin_col + 1), 
+            (origin_row, origin_col + 2),
+            (origin_row + 1, origin_col), 
+            (origin_row + 1, origin_col + 1), 
+            ];
+
+        Tetris {
+            poses: poses,
+            color: 4,
+        }
+    }
 }

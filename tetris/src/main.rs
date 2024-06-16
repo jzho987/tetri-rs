@@ -15,6 +15,7 @@ use std::io::stdout;
 
 mod builder;
 use crate::builder::build;
+use crate::builder::tetris::Tetris;
 mod grid;
 use crate::grid::grids;
 
@@ -25,6 +26,8 @@ fn main() {
     };
     let mut stdout = stdout();
     let mut cur_tetris = build::build_square_tetris(0, 0);
+    let mut next_tetris = build::build_zee_tetris(0, 0);
+    let mut saved_tetri: Option<Tetris> = Some(build::build_tee_tetris(0, 0));
     let frame_time_millis = 10;
     let duration = Duration::from_millis(frame_time_millis as u64);
     let mut drop_timer = 0;
@@ -34,8 +37,8 @@ fn main() {
     execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0)).unwrap();
     // render border
     {
-        for i in 0..=15 {
-            for j in 0..=21 {
+        for i in 0..=18 {
+            for j in 0..=23 {
                 let cell = get_cell(&3);
                 let row_pos = (2 * i) as u16;
                 execute!(stdout, cursor::MoveTo(row_pos, j), Print(cell)).unwrap();
@@ -45,15 +48,20 @@ fn main() {
     loop {
         // render (13, 1) to (15, 2) upcoming and stored.
         {
-            for i in 12..=14 {
-                for j in 1..=2 {
+            for i in 12..=17 {
+                for j in 1..=4 {
                     let cell = get_cell(&0);
                     let row_pos = (2 * i) as u16;
                     execute!(stdout, cursor::MoveTo(row_pos, j), Print(cell)).unwrap();
                 }
             }
-            for i in 12..=14 {
-                for j in 4..=5 {
+            for (col, row) in &next_tetris.poses {
+                let new_row = row + 13;
+                let new_col = col + 2;
+                execute!(stdout, cursor::MoveTo((new_row * 2) as u16, new_col as u16), Print(get_cell(&next_tetris.color))).unwrap();
+            }
+            for i in 12..=17 {
+                for j in 6..=9 {
                     let cell = get_cell(&0);
                     let row_pos = (2 * i) as u16;
                     execute!(stdout, cursor::MoveTo(row_pos, j), Print(cell)).unwrap();
@@ -124,11 +132,13 @@ fn main() {
         if drop {
             cur_tetris.drop_tetris(&grid.grid_vec);
             grid.apply_tetris(&cur_tetris);
-            cur_tetris = build::build_square_tetris(0, 0);
+            cur_tetris = next_tetris;
+            next_tetris = build::build_zee_tetris(0, 0);
         }
         else if !cur_tetris.move_tetris(&grid.grid_vec, &shift) {
             grid.apply_tetris(&cur_tetris);
-            cur_tetris = build::build_square_tetris(0, 0);
+            cur_tetris = next_tetris;
+            next_tetris = build::build_tee_tetris(0, 0);
         }
         std::thread::sleep(duration);
     }
