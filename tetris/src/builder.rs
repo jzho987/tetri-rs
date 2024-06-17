@@ -14,6 +14,14 @@ pub mod tetris {
     }
 
     impl Tetris {
+        pub fn get_poses_shifted(&self) -> Vec<RowCol> {
+            let mut shifted_poses = vec![];
+            for row_col in &self.poses {
+                shifted_poses.push(RowCol {row: row_col.row + self.shift.row, col: row_col.col + self.shift.col});
+            }
+            return shifted_poses
+        }
+
         pub fn move_tetris(&mut self, grid: &Vec<Vec<usize>>, direction: &(i32, i32)) -> bool {
             if *direction == (0, 0) {
                 return true
@@ -89,7 +97,7 @@ pub mod tetris {
             let mut smallest_col = i32::MAX;
             let mut largest_col = 0;
             for row_col in &self.poses {
-                let norm_pos: (i32, i32) = (row_col.row as i32 - centre.0 as i32, row_col.col as i32 - centre.1 as i32);
+                let norm_pos = (row_col.row as i32 - centre.0 as i32, row_col.col as i32 - centre.1 as i32);
                 let norm_spun = (norm_pos.1 * -1 * spin, norm_pos.0 * spin);
                 let spun = (norm_spun.0 + centre.0 as i32, norm_spun.1 + centre.1 as i32);
 
@@ -104,12 +112,12 @@ pub mod tetris {
             let mut shift = (0, 0);
             if smallest_row < 0 {
                 shift.0 = 0 - smallest_row;
-            } else if largest_row > 9 {
+            } else if largest_row > 19 {
                 shift.0 = 9 - largest_row;
             }
             if smallest_col < 0 {
                 shift.1 = 0 - smallest_col;
-            } else if largest_col > 19 {
+            } else if largest_col > 9 {
                 shift.1 = 19 - largest_col;
             }
 
