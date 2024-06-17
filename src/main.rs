@@ -21,9 +21,6 @@ mod builder;
 use crate::builder::build;
 
 // TODO: fix the spin to work with collision avoidance.
-// TODO: fix the save system.
-
-// TODO: improve IO and stutter.
 // TODO: add title screen and score etc.
 // TODO: make the render better.
 
