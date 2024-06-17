@@ -62,9 +62,9 @@ fn main() {
                     execute!(stdout, cursor::MoveTo(row_pos, j), Print(cell)).unwrap();
                 }
             }
-            for (col, row) in &next_tetris.poses {
-                let new_row = row + 13;
-                let new_col = col + 2;
+            for row_col in &next_tetris.poses {
+                let new_row = row_col.row + 13;
+                let new_col = row_col.col + 2;
                 execute!(stdout, cursor::MoveTo((new_row * 2) as u16, new_col as u16), Print(get_cell(&next_tetris.color))).unwrap();
             }
             for i in 12..=17 {
@@ -75,9 +75,9 @@ fn main() {
                 }
             }
             if let Some(tet) = &saved_tetris {
-                for (col, row) in &tet.poses {
-                    let new_row = row + 13;
-                    let new_col = col + 7;
+                for row_col in &tet.poses {
+                    let new_row = row_col.row + 13;
+                    let new_col = row_col.col + 7;
                     execute!(stdout, cursor::MoveTo((new_row * 2) as u16, new_col as u16), Print(get_cell(&tet.color))).unwrap();
                 }
             }
@@ -86,8 +86,8 @@ fn main() {
         {
             execute!(stdout, cursor::MoveTo(1, 1)).unwrap();
             let mut rendering_grid_vec = grid.grid_vec.clone();
-            for pos in &cur_tetris.poses {
-                *rendering_grid_vec.get_mut(pos.0).unwrap().get_mut(pos.1).unwrap() = cur_tetris.color;
+            for row_col in &cur_tetris.poses {
+                *rendering_grid_vec.get_mut(row_col.row).unwrap().get_mut(row_col.col).unwrap() = cur_tetris.color;
             }
             for (index, row) in rendering_grid_vec.iter().enumerate() {
                 let mut row_string_vec: Vec<String> = vec![];
