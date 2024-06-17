@@ -6,15 +6,10 @@ pub mod tetris {
         pub row: usize,
     }
 
-    pub struct NewTetris {
+    pub struct Tetris {
         pub poses: Vec<RowCol>,
         pub centre: RowCol,
         pub shift: RowCol,
-        pub color: usize,
-    }
-
-    pub struct Tetris {
-        pub poses: Vec<(usize, usize)>,
         pub color: usize,
     }
 
@@ -27,7 +22,9 @@ pub mod tetris {
             let mut new_poses = vec![];
             let num_cols = grid.get(0).unwrap().len() as i32;
             let num_rows = grid.len() as i32;
-            for (row, col) in &self.poses {
+            for row_col in &self.poses {
+                let row = &row_col.row;
+                let col = &row_col.col;
                 let new_row = *row as i32 - direction.0;
                 let new_col = *col as i32 - direction.1;
 
@@ -50,7 +47,11 @@ pub mod tetris {
                     return true
                 }
 
-                new_poses.push((new_row as usize, new_col as usize));
+                let new_pos = RowCol {
+                    row: new_row as usize,
+                    col: new_col as usize,
+                };
+                new_poses.push(new_pos);
             }
 
             self.poses = new_poses;
@@ -63,17 +64,19 @@ pub mod tetris {
 
         // reset to 0, 0
         pub fn reset_tetris(&mut self) {
-            let mut new_poses: Vec<(usize, usize)> = vec![];
+            let mut new_poses = vec![];
             let mut smallest_row = usize::MAX;
             let mut smallest_col = usize::MAX;
-            for (row, col) in &self.poses {
-                smallest_row = min(*row, smallest_row);
-                smallest_col = min(*col, smallest_col);
+            for row_col in &self.poses {
+                smallest_row = min(row_col.row, smallest_row);
+                smallest_col = min(row_col.col, smallest_col);
             }
-            for (row, col) in &self.poses {
-                let new_row = row - smallest_row;
-                let new_col = col - smallest_col;
-                new_poses.push((new_row, new_col));
+            for row_col in &self.poses {
+                let new_pos = RowCol {
+                    row: row_col.row - smallest_row,
+                    col: row_col.col - smallest_col,
+                };
+                new_poses.push(new_pos);
             }
             self.poses = new_poses;
         }
@@ -85,8 +88,8 @@ pub mod tetris {
             let mut largest_row = 0;
             let mut smallest_col = i32::MAX;
             let mut largest_col = 0;
-            for (row, col) in &self.poses {
-                let norm_pos: (i32, i32) = (*row as i32 - centre.0 as i32, *col as i32 - centre.1 as i32);
+            for row_col in &self.poses {
+                let norm_pos: (i32, i32) = (row_col.row as i32 - centre.0 as i32, row_col.col as i32 - centre.1 as i32);
                 let norm_spun = (norm_pos.1 * -1 * spin, norm_pos.0 * spin);
                 let spun = (norm_spun.0 + centre.0 as i32, norm_spun.1 + centre.1 as i32);
 
@@ -112,7 +115,10 @@ pub mod tetris {
 
             let mut new_shifted_poses = vec![];
             for poses in &new_poses {
-                let shifted_pos = ((poses.0 + shift.0) as usize, (poses.1 + shift.1) as usize);
+                let shifted_pos = RowCol {
+                    row: (poses.0 + shift.0) as usize,
+                    col: (poses.1 + shift.1) as usize,
+                };
                 new_shifted_poses.push(shifted_pos);
             }
 
@@ -124,11 +130,11 @@ pub mod tetris {
             let mut largest_row = 0;
             let mut smallest_col = usize::MAX;
             let mut largest_col = 0;
-            for (row, col) in &self.poses {
-                smallest_row = min(*row, smallest_row);
-                largest_row = max(*row, largest_row);
-                smallest_col = min(*col, smallest_col);
-                largest_col = max(*col, largest_col);
+            for row_col in &self.poses {
+                smallest_row = min(row_col.row, smallest_row);
+                largest_row = max(row_col.row, largest_row);
+                smallest_col = min(row_col.col, smallest_col);
+                largest_col = max(row_col.col, largest_col);
             }
             let centre_row = (smallest_row + largest_row) / 2;
             let centre_col = (smallest_col + largest_col) / 2;
@@ -140,6 +146,8 @@ pub mod tetris {
 pub mod build {
     use crate::builder::tetris::Tetris;
     use rand::{prelude, Rng};
+
+    use super::tetris::RowCol;
 
     pub fn build_random_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let mut rng = rand::thread_rng();
@@ -160,14 +168,17 @@ pub mod build {
     //  [X], [X]
     fn build_square_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
-            (origin_row, origin_col), 
-            (origin_row + 1, origin_col), 
-            (origin_row, origin_col + 1), 
-            (origin_row + 1, origin_col + 1),
+            RowCol {row: origin_row, col: origin_col},
+            RowCol {row: origin_row, col: origin_col},
+            RowCol {row: origin_row + 1, col: origin_col},
+            RowCol {row: origin_row, col: origin_col + 1},
+            RowCol {row: origin_row + 1, col: origin_col + 1},
             ];
 
         Tetris {
             poses: poses,
+            centre: RowCol {row: origin_row, col: origin_col},
+            shift: RowCol {row: 0, col: 0},
             color: 1,
         }
     }
@@ -177,14 +188,16 @@ pub mod build {
     //  [X], [X], [X]
     fn build_tee_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
-            (origin_row, origin_col + 1), 
-            (origin_row + 1, origin_col), 
-            (origin_row + 1, origin_col + 1), 
-            (origin_row + 1, origin_col + 2),
+            RowCol {row: origin_row, col: origin_col + 1}, 
+            RowCol {row: origin_row + 1, col: origin_col}, 
+            RowCol {row: origin_row + 1, col: origin_col + 1}, 
+            RowCol {row: origin_row + 1, col: origin_col + 2},
             ];
 
         Tetris {
             poses: poses,
+            centre: RowCol {row: origin_row, col: origin_col},
+            shift: RowCol {row: 0, col: 0},
             color: 2,
         }
     }
@@ -194,14 +207,16 @@ pub mod build {
     //  [X], [X], [ ]
     fn build_zee_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
-            (origin_row, origin_col + 1), 
-            (origin_row, origin_col + 2),
-            (origin_row + 1, origin_col), 
-            (origin_row + 1, origin_col + 1), 
+            RowCol {row: origin_row, col: origin_col + 1}, 
+            RowCol {row: origin_row, col: origin_col + 2},
+            RowCol {row: origin_row + 1, col: origin_col}, 
+            RowCol {row: origin_row + 1, col: origin_col + 1}, 
             ];
 
         Tetris {
             poses: poses,
+            centre: RowCol {row: origin_row, col: origin_col},
+            shift: RowCol {row: 0, col: 0},
             color: 5,
         }
     }
@@ -211,14 +226,16 @@ pub mod build {
     //  [ ], [X], [X]
     fn build_zaa_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
-            (origin_row, origin_col), 
-            (origin_row, origin_col + 1), 
-            (origin_row + 1, origin_col + 1), 
-            (origin_row + 1, origin_col + 2),
+            RowCol {row: origin_row, col: origin_col}, 
+            RowCol {row: origin_row, col: origin_col + 1}, 
+            RowCol {row: origin_row + 1, col: origin_col + 1}, 
+            RowCol {row: origin_row + 1, col: origin_col + 2},
             ];
 
         Tetris {
             poses: poses,
+            centre: RowCol {row: origin_row, col: origin_col},
+            shift: RowCol {row: 0, col: 0},
             color: 4,
         }
     }
@@ -228,14 +245,16 @@ pub mod build {
     //  [ ], [ ], [ ], [ ]
     fn build_long_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
-            (origin_row, origin_col), 
-            (origin_row, origin_col + 1), 
-            (origin_row, origin_col + 2), 
-            (origin_row, origin_col + 3), 
+            RowCol {row: origin_row, col: origin_col}, 
+            RowCol {row: origin_row, col: origin_col + 1}, 
+            RowCol {row: origin_row, col: origin_col + 2}, 
+            RowCol {row: origin_row, col: origin_col + 3}, 
             ];
 
         Tetris {
             poses: poses,
+            centre: RowCol {row: origin_row, col: origin_col},
+            shift: RowCol {row: 0, col: 0},
             color: 6,
         }
     }
