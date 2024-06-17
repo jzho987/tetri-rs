@@ -18,15 +18,14 @@ pub mod tetris {
         pub fn get_poses(&self) -> Vec<RowCol> {
             let mut shifted_poses = vec![];
             for row_col in &self.tiles {
-                let row = &row_col.row;
-                let col = &row_col.col;
-                let norm_unspun = (row - self.centre.row, col - self.centre.col);
-                let mut norm_spun = (norm_unspun.0 as i32, norm_unspun.1 as i32);
-                for i in 0..self.spin {
+                let norm_row = row_col.row as i32 - self.centre.row as i32;
+                let norm_col = row_col.col as i32 - self.centre.col as i32;
+                let mut norm_spun = (norm_row, norm_col);
+                for _i in 0..self.spin {
                     norm_spun = (-norm_spun.1, norm_spun.0);
                 }
-                let abs_row = (norm_spun.0 + self.shift.row as i32) as usize;
-                let abs_col = (norm_spun.1 + self.shift.col as i32) as usize;
+                let abs_row = (norm_spun.0 + self.centre.row as i32 + self.shift.row as i32) as usize;
+                let abs_col = (norm_spun.1 + self.centre.col as i32 + self.shift.col as i32) as usize;
                 let spun = RowCol {
                     row: abs_row,
                     col: abs_col,
@@ -89,20 +88,19 @@ pub mod tetris {
         }
 
         pub fn spin_tetris(&mut self, spin: i32) {
-            let new_spin = (self.spin + spin) % 4;
+            let new_spin = (self.spin + spin + 4) % 4;
             let mut row_shift = 0;
             let mut col_shift = 0;
             // check we are not colliding with anything
             for row_col in &self.tiles {
-                let row = &row_col.row;
-                let col = &row_col.col;
-                let norm_unspun = (row - self.centre.row, col - self.centre.col);
-                let mut norm_spun = (norm_unspun.0 as i32, norm_unspun.1 as i32);
-                for i in 0..new_spin {
+                let norm_row = row_col.row as i32 - self.centre.row as i32;
+                let norm_col = row_col.col as i32 - self.centre.col as i32;
+                let mut norm_spun = (norm_row, norm_col);
+                for _i in 0..new_spin {
                     norm_spun = (-norm_spun.1, norm_spun.0);
                 }
-                let abs_row = (norm_spun.0 + self.shift.row as i32);
-                let abs_col = (norm_spun.1 + self.shift.col as i32);
+                let abs_row = norm_spun.0 + self.centre.row as i32 + self.shift.row as i32;
+                let abs_col = norm_spun.1 + self.centre.col as i32 + self.shift.col as i32;
                 if abs_row < 0 {
                     row_shift = max(row_shift, -abs_row);
                 } else if abs_row > 19 {
@@ -111,11 +109,11 @@ pub mod tetris {
                 if abs_col < 0 {
                     col_shift = max(col_shift, -abs_col);
                 } else if abs_col > 9 {
-                    col_shift = min(col_shift, 19 - abs_col);
+                    col_shift = min(col_shift, 9 - abs_col);
                 }
             }
 
-            let new_shift_row = (self.shift.col as i32 + row_shift) as usize;
+            let new_shift_row = (self.shift.row as i32 + row_shift) as usize;
             let new_shift_col = (self.shift.col as i32 + col_shift) as usize;
             self.shift = RowCol {
                 row: new_shift_row,
