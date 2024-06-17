@@ -7,34 +7,48 @@ pub mod tetris {
     }
 
     pub struct Tetris {
-        pub poses: Vec<RowCol>,
+        pub tiles: Vec<RowCol>,
         pub centre: RowCol,
+        pub spin: i32, // 0 - 3, 0 being upright, and 3 being 270 degrees spun.
         pub shift: RowCol,
         pub color: usize,
     }
 
     impl Tetris {
-        pub fn get_poses_shifted(&self) -> Vec<RowCol> {
+        pub fn get_poses(&self) -> Vec<RowCol> {
             let mut shifted_poses = vec![];
-            for row_col in &self.poses {
-                shifted_poses.push(RowCol {row: row_col.row + self.shift.row, col: row_col.col + self.shift.col});
+            for row_col in &self.tiles {
+                let row = &row_col.row;
+                let col = &row_col.col;
+                let norm_unspun = (row - self.centre.row, col - self.centre.col);
+                let mut norm_spun = (norm_unspun.0 as i32, norm_unspun.1 as i32);
+                for i in 0..self.spin {
+                    norm_spun = (-norm_spun.1, norm_spun.0);
+                }
+                let abs_row = (norm_spun.0 + self.shift.row as i32) as usize;
+                let abs_col = (norm_spun.1 + self.shift.col as i32) as usize;
+                let spun = RowCol {
+                    row: abs_row,
+                    col: abs_col,
+                };
+
+                shifted_poses.push(spun);
             }
             return shifted_poses
         }
 
         pub fn move_tetris(&mut self, grid: &Vec<Vec<usize>>, direction: &(i32, i32)) -> bool {
+            // check if we hit floor
             if *direction == (0, 0) {
                 return true
             }
-
-            let mut new_poses = vec![];
             let num_cols = grid.get(0).unwrap().len() as i32;
             let num_rows = grid.len() as i32;
-            for row_col in &self.poses {
+            for row_col in &self.get_poses() {
                 let row = &row_col.row;
                 let col = &row_col.col;
-                let new_row = *row as i32 - direction.0;
-                let new_col = *col as i32 - direction.1;
+                let new_row = *row as i32 + direction.0;
+                let new_col = *col as i32 + direction.1;
 
                 if new_col < 0 || new_col >= num_cols {
                     return true
@@ -54,99 +68,60 @@ pub mod tetris {
                     != 0 as usize {
                     return true
                 }
-
-                let new_pos = RowCol {
-                    row: new_row as usize,
-                    col: new_col as usize,
-                };
-                new_poses.push(new_pos);
             }
 
-            self.poses = new_poses;
+            let new_shift = RowCol {
+                row: (self.shift.row as i32 + direction.0) as usize,
+                col: (self.shift.col as i32 + direction.1) as usize,
+            };
+            self.shift = new_shift;
             return true
         }
 
         pub fn drop_tetris(&mut self, grid: &Vec<Vec<usize>>) {
-            while self.move_tetris(grid, &(-1, 0)) {}
+            while self.move_tetris(grid, &(1, 0)) {}
         }
 
         // reset to 0, 0
         pub fn reset_tetris(&mut self) {
-            let mut new_poses = vec![];
-            let mut smallest_row = usize::MAX;
-            let mut smallest_col = usize::MAX;
-            for row_col in &self.poses {
-                smallest_row = min(row_col.row, smallest_row);
-                smallest_col = min(row_col.col, smallest_col);
-            }
-            for row_col in &self.poses {
-                let new_pos = RowCol {
-                    row: row_col.row - smallest_row,
-                    col: row_col.col - smallest_col,
-                };
-                new_poses.push(new_pos);
-            }
-            self.poses = new_poses;
+            self.shift = RowCol {row: 0, col: 0};
+            self.spin = 0;
         }
 
         pub fn spin_tetris(&mut self, spin: i32) {
-            let centre = self.get_centre();
-            let mut new_poses: Vec<(i32, i32)> = vec![];
-            let mut smallest_row = i32::MAX;
-            let mut largest_row = 0;
-            let mut smallest_col = i32::MAX;
-            let mut largest_col = 0;
-            for row_col in &self.poses {
-                let norm_pos = (row_col.row as i32 - centre.0 as i32, row_col.col as i32 - centre.1 as i32);
-                let norm_spun = (norm_pos.1 * -1 * spin, norm_pos.0 * spin);
-                let spun = (norm_spun.0 + centre.0 as i32, norm_spun.1 + centre.1 as i32);
-
-                smallest_row = min(spun.0, smallest_row);
-                largest_row = max(spun.0, largest_row);
-                smallest_col = min(spun.1, smallest_col);
-                largest_col = max(spun.1, largest_col);
-
-                new_poses.push(spun);
-            }
-            
-            let mut shift = (0, 0);
-            if smallest_row < 0 {
-                shift.0 = 0 - smallest_row;
-            } else if largest_row > 19 {
-                shift.0 = 9 - largest_row;
-            }
-            if smallest_col < 0 {
-                shift.1 = 0 - smallest_col;
-            } else if largest_col > 9 {
-                shift.1 = 19 - largest_col;
+            let new_spin = (self.spin + spin) % 4;
+            let mut row_shift = 0;
+            let mut col_shift = 0;
+            // check we are not colliding with anything
+            for row_col in &self.tiles {
+                let row = &row_col.row;
+                let col = &row_col.col;
+                let norm_unspun = (row - self.centre.row, col - self.centre.col);
+                let mut norm_spun = (norm_unspun.0 as i32, norm_unspun.1 as i32);
+                for i in 0..new_spin {
+                    norm_spun = (-norm_spun.1, norm_spun.0);
+                }
+                let abs_row = (norm_spun.0 + self.shift.row as i32);
+                let abs_col = (norm_spun.1 + self.shift.col as i32);
+                if abs_row < 0 {
+                    row_shift = max(row_shift, -abs_row);
+                } else if abs_row > 19 {
+                    row_shift = min(row_shift, 19 - abs_row);
+                }
+                if abs_col < 0 {
+                    col_shift = max(col_shift, -abs_col);
+                } else if abs_col > 9 {
+                    col_shift = min(col_shift, 19 - abs_col);
+                }
             }
 
-            let mut new_shifted_poses = vec![];
-            for poses in &new_poses {
-                let shifted_pos = RowCol {
-                    row: (poses.0 + shift.0) as usize,
-                    col: (poses.1 + shift.1) as usize,
-                };
-                new_shifted_poses.push(shifted_pos);
-            }
-
-            self.poses = new_shifted_poses;
-        }
-
-        fn get_centre(&self) -> (usize, usize) {
-            let mut smallest_row = usize::MAX;
-            let mut largest_row = 0;
-            let mut smallest_col = usize::MAX;
-            let mut largest_col = 0;
-            for row_col in &self.poses {
-                smallest_row = min(row_col.row, smallest_row);
-                largest_row = max(row_col.row, largest_row);
-                smallest_col = min(row_col.col, smallest_col);
-                largest_col = max(row_col.col, largest_col);
-            }
-            let centre_row = (smallest_row + largest_row) / 2;
-            let centre_col = (smallest_col + largest_col) / 2;
-            (centre_row, centre_col)
+            let new_shift_row = (self.shift.col as i32 + row_shift) as usize;
+            let new_shift_col = (self.shift.col as i32 + col_shift) as usize;
+            self.shift = RowCol {
+                row: new_shift_row,
+                col: new_shift_col,
+            };
+            self.spin = new_spin;
         }
     }
 }
@@ -184,9 +159,10 @@ pub mod build {
             ];
 
         Tetris {
-            poses: poses,
+            tiles: poses,
             centre: RowCol {row: origin_row, col: origin_col},
             shift: RowCol {row: 0, col: 0},
+            spin: 0,
             color: 1,
         }
     }
@@ -203,9 +179,10 @@ pub mod build {
             ];
 
         Tetris {
-            poses: poses,
+            tiles: poses,
             centre: RowCol {row: origin_row, col: origin_col},
             shift: RowCol {row: 0, col: 0},
+            spin: 0,
             color: 2,
         }
     }
@@ -222,9 +199,10 @@ pub mod build {
             ];
 
         Tetris {
-            poses: poses,
+            tiles: poses,
             centre: RowCol {row: origin_row, col: origin_col},
             shift: RowCol {row: 0, col: 0},
+            spin: 0,
             color: 5,
         }
     }
@@ -241,9 +219,10 @@ pub mod build {
             ];
 
         Tetris {
-            poses: poses,
+            tiles: poses,
             centre: RowCol {row: origin_row, col: origin_col},
             shift: RowCol {row: 0, col: 0},
+            spin: 0,
             color: 4,
         }
     }
@@ -260,9 +239,10 @@ pub mod build {
             ];
 
         Tetris {
-            poses: poses,
+            tiles: poses,
             centre: RowCol {row: origin_row, col: origin_col},
             shift: RowCol {row: 0, col: 0},
+            spin: 0,
             color: 6,
         }
     }

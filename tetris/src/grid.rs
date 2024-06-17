@@ -8,7 +8,7 @@ pub mod grids {
 
     impl Grid {
         pub fn apply_tetris(&mut self, tetris: &Tetris) {
-            for row_col in &tetris.poses {
+            for row_col in &tetris.get_poses() {
                 let row = row_col.row;
                 let col = row_col.col;
                 *self.grid_vec

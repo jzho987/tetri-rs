@@ -62,7 +62,7 @@ fn main() {
                     execute!(stdout, cursor::MoveTo(row_pos, j), Print(cell)).unwrap();
                 }
             }
-            for row_col in &next_tetris.poses {
+            for row_col in &next_tetris.tiles {
                 let new_row = row_col.row + 13;
                 let new_col = row_col.col + 2;
                 execute!(stdout, cursor::MoveTo((new_row * 2) as u16, new_col as u16), Print(get_cell(&next_tetris.color))).unwrap();
@@ -75,7 +75,7 @@ fn main() {
                 }
             }
             if let Some(tet) = &saved_tetris {
-                for row_col in &tet.poses {
+                for row_col in &tet.tiles {
                     let new_row = row_col.row + 13;
                     let new_col = row_col.col + 7;
                     execute!(stdout, cursor::MoveTo((new_row * 2) as u16, new_col as u16), Print(get_cell(&tet.color))).unwrap();
@@ -86,7 +86,7 @@ fn main() {
         {
             execute!(stdout, cursor::MoveTo(1, 1)).unwrap();
             let mut rendering_grid_vec = grid.grid_vec.clone();
-            for row_col in &cur_tetris.poses {
+            for row_col in &cur_tetris.get_poses() {
                 *rendering_grid_vec.get_mut(row_col.row).unwrap().get_mut(row_col.col).unwrap() = cur_tetris.color;
             }
             for (index, row) in rendering_grid_vec.iter().enumerate() {
@@ -106,7 +106,7 @@ fn main() {
         // step drop;
         drop_timer -= frame_time_millis;
         if drop_timer <= 0 {
-            shift.0 = -1;
+            shift.0 = 1;
             drop_timer = drop_time_millis;
         }
         // get io and wait;
@@ -117,19 +117,19 @@ fn main() {
                     modifiers: KeyModifiers::NONE,
                     kind: KeyEventKind::Press,
                     state: KeyEventState::NONE,
-                }) => shift.1 = 1,
+                }) => shift.1 = -1,
                 Event::Key(KeyEvent {
                     code: KeyCode::Char('l'),
                     modifiers: KeyModifiers::NONE,
                     kind: KeyEventKind::Press,
                     state: KeyEventState::NONE,
-                }) => shift.1 = -1,
+                }) => shift.1 = 1,
                 Event::Key(KeyEvent {
                     code: KeyCode::Char('j'),
                     modifiers: KeyModifiers::NONE,
                     kind: KeyEventKind::Press,
                     state: KeyEventState::NONE,
-                }) => shift.0 = -1,
+                }) => shift.0 += 1,
                 Event::Key(KeyEvent {
                     code: KeyCode::Char(' '),
                     modifiers: KeyModifiers::NONE,
