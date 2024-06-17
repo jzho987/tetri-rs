@@ -107,7 +107,7 @@ fn main() {
         // step drop;
         drop_timer -= frame_time_millis;
         if drop_timer <= 0 {
-            // shift.0 = 1;
+            shift.0 = 1;
             drop_timer = drop_time_millis;
         }
         // get io and wait;
