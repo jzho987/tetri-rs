@@ -144,8 +144,8 @@ pub mod build {
         }
     }
 
-    // origin is top left corner.
-    // >[X], [X]
+    // origin: o->[ ], centre: c->[ ]
+    //co[X], [X]
     //  [X], [X]
     fn build_square_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
@@ -158,16 +158,16 @@ pub mod build {
 
         Tetris {
             tiles: poses,
-            centre: RowCol {row: origin_row, col: origin_col},
-            shift: RowCol {row: 0, col: 0},
+            shift: RowCol {row: origin_row, col: origin_col},
+            centre: RowCol {row: 0, col: 0},
             spin: 0,
             color: 1,
         }
     }
 
-    // origin is top left corner, which is empty.
+    // origin: o->[ ], centre: c->[ ]
     // >[ ], [X], [ ]
-    //  [X], [X], [X]
+    //  [X],c[X], [X]
     fn build_tee_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
             RowCol {row: origin_row, col: origin_col + 1}, 
@@ -178,16 +178,16 @@ pub mod build {
 
         Tetris {
             tiles: poses,
-            centre: RowCol {row: origin_row, col: origin_col},
-            shift: RowCol {row: 0, col: 0},
+            shift: RowCol {row: origin_row, col: origin_col},
+            centre: RowCol {row: 1, col: 1},
             spin: 0,
             color: 2,
         }
     }
 
-    // origin is top left corner, which is empty.
-    // >[ ], [X], [X]
-    //  [X], [X], [ ]
+    // origin: o->[ ], centre: c->[ ]
+    // o[ ], [X], [X]
+    //  [X],c[X], [ ]
     fn build_zee_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
             RowCol {row: origin_row, col: origin_col + 1}, 
@@ -198,15 +198,15 @@ pub mod build {
 
         Tetris {
             tiles: poses,
-            centre: RowCol {row: origin_row, col: origin_col},
-            shift: RowCol {row: 0, col: 0},
+            shift: RowCol {row: origin_row, col: origin_col},
+            centre: RowCol {row: 1, col: 1},
             spin: 0,
             color: 5,
         }
     }
 
-    // origin is top left corner, which is empty.
-    // >[X], [X], [ ]
+    // origin: o->[ ], centre: c->[ ]
+    // o[X],c[X], [ ]
     //  [ ], [X], [X]
     fn build_zaa_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let poses = vec![
@@ -218,8 +218,8 @@ pub mod build {
 
         Tetris {
             tiles: poses,
-            centre: RowCol {row: origin_row, col: origin_col},
-            shift: RowCol {row: 0, col: 0},
+            shift: RowCol {row: origin_row, col: origin_col},
+            centre: RowCol {row: 0, col: 1},
             spin: 0,
             color: 4,
         }
