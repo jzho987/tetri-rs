@@ -19,6 +19,13 @@ use crate::builder::tetris::Tetris;
 mod grid;
 use crate::grid::grids;
 
+// TODO: fix the spin to work with collision avoidance.
+// TODO: fix the save system.
+
+// TODO: improve IO and stutter.
+// TODO: add title screen and score etc.
+// TODO: make the render better.
+
 fn main() {
     // init
     let mut grid = grids::Grid {
@@ -27,7 +34,7 @@ fn main() {
     let mut stdout = stdout();
     let mut cur_tetris = build::build_random_tetris(0, 0);
     let mut next_tetris = build::build_random_tetris(0, 0);
-    let mut saved_tetri: Option<Tetris> = Some(build::build_random_tetris(0, 0));
+    let mut saved_tetris: Option<Tetris> = None;
     let frame_time_millis = 10;
     let duration = Duration::from_millis(frame_time_millis as u64);
     let mut drop_timer = 0;
@@ -67,6 +74,13 @@ fn main() {
                     execute!(stdout, cursor::MoveTo(row_pos, j), Print(cell)).unwrap();
                 }
             }
+            if let Some(tet) = &saved_tetris {
+                for (col, row) in &tet.poses {
+                    let new_row = row + 13;
+                    let new_col = col + 7;
+                    execute!(stdout, cursor::MoveTo((new_row * 2) as u16, new_col as u16), Print(get_cell(&tet.color))).unwrap();
+                }
+            }
         }
         // render (1,1) to (11,21) is tetris grid.
         {
@@ -86,7 +100,9 @@ fn main() {
         }
 
         let mut shift = (0_i32, 0_i32);
+        let mut spin = 0;
         let mut drop = false;
+        let mut save = false;
         // step drop;
         drop_timer -= frame_time_millis;
         if drop_timer <= 0 {
@@ -121,6 +137,24 @@ fn main() {
                     state: KeyEventState::NONE,
                 }) => drop = true,
                 Event::Key(KeyEvent {
+                    code: KeyCode::Char('k'),
+                    modifiers: KeyModifiers::NONE,
+                    kind: KeyEventKind::Press,
+                    state: KeyEventState::NONE,
+                }) => spin = -1,
+                Event::Key(KeyEvent {
+                    code: KeyCode::Char('z'),
+                    modifiers: KeyModifiers::NONE,
+                    kind: KeyEventKind::Press,
+                    state: KeyEventState::NONE,
+                }) => spin = 1,
+                Event::Key(KeyEvent {
+                    code: KeyCode::Char('c'),
+                    modifiers: KeyModifiers::NONE,
+                    kind: KeyEventKind::Press,
+                    state: KeyEventState::NONE,
+                }) => save = true,
+                Event::Key(KeyEvent {
                     code: KeyCode::Char('q'),
                     modifiers: KeyModifiers::NONE,
                     kind: KeyEventKind::Press,
@@ -135,12 +169,29 @@ fn main() {
             cur_tetris = next_tetris;
             next_tetris = build::build_random_tetris(0, 0);
         }
+        else if spin != 0 {
+            cur_tetris.spin_tetris(spin);
+        }
+        else if save {
+            match saved_tetris {
+                Some(tet) => {
+                    cur_tetris.reset_tetris();
+                    saved_tetris = Some(cur_tetris);
+                    cur_tetris = tet;
+                },
+                None => {
+                    cur_tetris.reset_tetris();
+                    saved_tetris = Some(cur_tetris);
+                    cur_tetris = next_tetris;
+                    next_tetris = build::build_random_tetris(0, 0);
+                },
+            };
+        }
         else if !cur_tetris.move_tetris(&grid.grid_vec, &shift) {
             grid.apply_tetris(&cur_tetris);
             cur_tetris = next_tetris;
             next_tetris = build::build_random_tetris(0, 0);
         }
-        std::thread::sleep(duration);
     }
 
     disable_raw_mode().unwrap();
