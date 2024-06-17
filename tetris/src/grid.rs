@@ -8,10 +8,12 @@ pub mod grids {
 
     impl Grid {
         pub fn apply_tetris(&mut self, tetris: &Tetris) {
-            for (row, col) in &tetris.poses {
+            for row_col in &tetris.poses {
+                let row = row_col.row;
+                let col = row_col.col;
                 *self.grid_vec
-                    .get_mut(*row).unwrap()
-                    .get_mut(*col).unwrap() = tetris.color;
+                    .get_mut(row).unwrap()
+                    .get_mut(col).unwrap() = tetris.color;
             }
 
             let cp_grid = self.grid_vec.clone();
