@@ -13,11 +13,12 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType};
 
 use std::io::stdout;
 
+mod models;
+use crate::models::tetris::Tetris;
+use crate::models::grid::Grid;
+
 mod builder;
 use crate::builder::build;
-use crate::builder::tetris::Tetris;
-mod grid;
-use crate::grid::grids;
 
 // TODO: fix the spin to work with collision avoidance.
 // TODO: fix the save system.
@@ -28,7 +29,7 @@ use crate::grid::grids;
 
 fn main() {
     // init
-    let mut grid = grids::Grid {
+    let mut grid = Grid {
         grid_vec: vec![vec![0; 10]; 20],
     };
     let mut stdout = stdout();
@@ -62,7 +63,7 @@ fn main() {
                     execute!(stdout, cursor::MoveTo(row_pos, j), Print(cell)).unwrap();
                 }
             }
-            for row_col in &next_tetris.tiles {
+            for row_col in next_tetris.get_tiles() {
                 let new_row = row_col.row + 13;
                 let new_col = row_col.col + 2;
                 execute!(stdout, cursor::MoveTo((new_row * 2) as u16, new_col as u16), Print(get_cell(&next_tetris.color))).unwrap();
@@ -75,7 +76,7 @@ fn main() {
                 }
             }
             if let Some(tet) = &saved_tetris {
-                for row_col in &tet.tiles {
+                for row_col in tet.get_tiles() {
                     let new_row = row_col.row + 13;
                     let new_col = row_col.col + 7;
                     execute!(stdout, cursor::MoveTo((new_row * 2) as u16, new_col as u16), Print(get_cell(&tet.color))).unwrap();
