@@ -2,11 +2,13 @@ use std::{cmp::{max, min}, usize};
 
 use super::grid::Grid;
 
+#[derive(Clone)]
 pub struct RowCol {
     pub col: usize,
     pub row: usize,
 }
 
+#[derive(Clone)]
 pub struct Tetris {
     tiles: Vec<RowCol>,
     centre: RowCol,
@@ -89,6 +91,12 @@ impl Tetris {
 
     pub fn drop_tetris(&mut self, grid: &Vec<Vec<usize>>) {
         while self.try_move_or_set_tetris(grid, &(1, 0)) {}
+    }
+
+    pub fn get_droped_tetris(&self, grid: &Vec<Vec<usize>>) -> Tetris {
+        let mut shadow = self.clone();
+        while shadow.try_move_or_set_tetris(grid, &(1, 0)) {}
+        return shadow
     }
 
     // reset to 0, 0

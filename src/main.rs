@@ -1,6 +1,5 @@
 extern crate colored;
 use colored::Colorize;
-use models::tetris::RowCol;
 
 extern crate futures_timer;
 use std::time::Duration;
@@ -9,7 +8,7 @@ use std::time::Duration;
 extern crate crossterm;
 use crossterm::cursor;
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers, KeyEventKind, KeyEventState};
-use crossterm::style::Print;
+use crossterm::style::{Print, Stylize};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType};
 
 use std::io::stdout;
@@ -128,7 +127,7 @@ fn main() {
                 }
             }
         }
-        // render () score
+        // render score
         {
 
             for i in 12..=17 {
@@ -148,6 +147,10 @@ fn main() {
         {
             execute!(stdout, cursor::MoveTo(1, 1)).unwrap();
             let mut rendering_grid_vec = grid.grid_vec.clone();
+            let shadow = cur_tetris.get_droped_tetris(&grid.grid_vec);
+            for row_col in &shadow.get_poses() {
+                *rendering_grid_vec.get_mut(row_col.row).unwrap().get_mut(row_col.col).unwrap() = 7;
+            }
             for row_col in &cur_tetris.get_poses() {
                 *rendering_grid_vec.get_mut(row_col.row).unwrap().get_mut(row_col.col).unwrap() = cur_tetris.color;
             }
@@ -268,28 +271,30 @@ fn get_cell(cell: &usize) -> String {
     let cell_uncolored = "██";
     match cell {
         // background
-        0 => return format!("{}", cell_uncolored.white()),
-        3 => return format!("{}", cell_uncolored.blue()),
+        0 => return format!("{}", Colorize::white(cell_uncolored)),
+        3 => return format!("{}", Colorize::blue(cell_uncolored)),
 
         // tetris
-        1 => return format!("{}", cell_uncolored.red()),
-        2 => return format!("{}", cell_uncolored.green()),
-        4 => return format!("{}", cell_uncolored.purple()),
-        5 => return format!("{}", cell_uncolored.cyan()),
-        6 => return format!("{}", cell_uncolored.bright_blue()),
+        1 => return format!("{}", Colorize::red(cell_uncolored)),
+        2 => return format!("{}", Colorize::green(cell_uncolored)),
+        4 => return format!("{}", Colorize::purple(cell_uncolored)),
+        5 => return format!("{}", Colorize::cyan(cell_uncolored)),
+        6 => return format!("{}", Colorize::bright_blue(cell_uncolored)),
+        // tetris shadow
+        7 => return format!("{}", Stylize::dark_grey(cell_uncolored)),
         
-        _ => return format!("{}", cell_uncolored.white()),
+        _ => return format!("{}", Colorize::white(cell_uncolored)),
     }
 }
 
 fn get_text(text: &str, color: &usize) -> String {
     match color {
         // background
-        0 => return format!("{}", text.white().on_blue()),
-        1 => return format!("{}", text.black().on_white()),
-        2 => return format!("{}", text.white().on_blue().bold()),
+        0 => return format!("{}", Colorize::white(text).on_blue()),
+        1 => return format!("{}", Colorize::black(text).on_white()),
+        2 => return format!("{}", Colorize::white(text).on_blue().bold()),
         
-        _ => return format!("{}", text.white()),
+        _ => return format!("{}", Colorize::white(text)),
     }
 }
 
