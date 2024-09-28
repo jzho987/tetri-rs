@@ -1,5 +1,6 @@
 extern crate colored;
 use colored::Colorize;
+use models::tetris::RowCol;
 
 extern crate futures_timer;
 use std::time::Duration;
@@ -23,6 +24,13 @@ use crate::builder::build;
 // TODO: add title screen and score etc.
 // TODO: make the render better.
 
+const CORNER_TOP_LEFT_CHAR: char = '╔';
+const CORNER_TOP_RIGHT_CHAR: char = '╗';
+const CORNER_BOT_LEFT_CHAR: char = '╚';
+const CORNER_BOT_RIGHT_CHAR: char = '╝';
+const BORDER_VERT_CHAR: char = '║';
+const BORDER_HORI_CHAR: char = '═';
+
 fn main() {
     // init
     let mut grid = Grid {
@@ -32,13 +40,18 @@ fn main() {
     let mut cur_tetris = build::build_random_tetris(0, 0);
     let mut next_tetris = build::build_random_tetris(0, 0);
     let mut saved_tetris: Option<Tetris> = None;
-    let mut score = 0;
+
+    // init timers
     let frame_time_millis = 10;
     let duration = Duration::from_millis(frame_time_millis as u64);
     let mut drop_timer = 0;
     let drop_time_millis = 300;
-    enable_raw_mode().unwrap();
 
+    // init score
+    let mut score = 0;
+
+    // prep render
+    enable_raw_mode().unwrap();
     execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0)).unwrap();
     // render background
     {
@@ -50,6 +63,41 @@ fn main() {
             }
         }
     }
+    // render frame
+    {
+        let row_start = 0;
+        let row_end = 37;
+        let col_start = 0;
+        let col_end = 23;
+
+        for i in row_start..=row_end {
+            let text = get_text(&BORDER_HORI_CHAR.to_string(), &0);
+            execute!(stdout, cursor::MoveTo(i, col_start), Print(&text)).unwrap();
+            execute!(stdout, cursor::MoveTo(i, col_end), Print(&text)).unwrap();
+        }
+        for i in col_start..=col_end {
+            let text = get_text(&BORDER_VERT_CHAR.to_string(), &0);
+            execute!(stdout, cursor::MoveTo(row_start, i), Print(&text)).unwrap();
+            execute!(stdout, cursor::MoveTo(row_end, i), Print(&text)).unwrap();
+        }
+
+        let text_corner_top_left = get_text(&CORNER_TOP_LEFT_CHAR.to_string(), &2);
+        let text_corner_top_right = get_text(&CORNER_TOP_RIGHT_CHAR.to_string(), &2);
+        let text_corner_bot_left = get_text(&CORNER_BOT_LEFT_CHAR.to_string(), &2);
+        let text_corner_bot_right = get_text(&CORNER_BOT_RIGHT_CHAR.to_string(), &2);
+
+        execute!(stdout, cursor::MoveTo(row_start, col_start), Print(&text_corner_top_left)).unwrap();
+        execute!(stdout, cursor::MoveTo(row_start, col_end), Print(&text_corner_bot_left)).unwrap();
+        execute!(stdout, cursor::MoveTo(row_end, col_start), Print(&text_corner_top_right)).unwrap();
+        execute!(stdout, cursor::MoveTo(row_end, col_end), Print(&text_corner_bot_right)).unwrap();
+    }
+    // render title
+    {
+        let text_raw = format!("{} T E T I - R S {}", BORDER_VERT_CHAR, BORDER_VERT_CHAR);
+        let text = get_text(&text_raw, &2);
+        execute!(stdout, cursor::MoveTo(10, 0), Print(&text)).unwrap();
+    }
+
     loop {
         // render (13, 1) to (15, 2) upcoming and stored.
         {
@@ -179,7 +227,10 @@ fn main() {
         };
         if drop {
             cur_tetris.drop_tetris(&grid.grid_vec);
-            grid.apply_tetris(&cur_tetris);
+
+            let lines_cleared = grid.apply_tetris(&cur_tetris);
+            score += get_score(lines_cleared);
+
             cur_tetris = next_tetris;
             next_tetris = build::build_random_tetris(0, 0);
         }
@@ -202,7 +253,9 @@ fn main() {
             };
         }
         else if !cur_tetris.try_move_or_set_tetris(&grid.grid_vec, &shift) {
-            grid.apply_tetris(&cur_tetris);
+            let lines_cleared = grid.apply_tetris(&cur_tetris);
+            score += get_score(lines_cleared);
+
             cur_tetris = next_tetris;
             next_tetris = build::build_random_tetris(0, 0);
         }
@@ -234,7 +287,20 @@ fn get_text(text: &str, color: &usize) -> String {
         // background
         0 => return format!("{}", text.white().on_blue()),
         1 => return format!("{}", text.black().on_white()),
+        2 => return format!("{}", text.white().on_blue().bold()),
         
         _ => return format!("{}", text.white()),
     }
+}
+
+fn get_score(lines_cleared: i32) -> i32 {
+    let base_multiplier = 1000; 
+    let tetris_multiplier = 1.5;
+
+    let mut score = (lines_cleared * base_multiplier) as f64;
+    if lines_cleared >= 4 {
+        score *= tetris_multiplier;
+    }
+    
+    return score as i32
 }
