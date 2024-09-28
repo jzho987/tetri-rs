@@ -20,7 +20,6 @@ use crate::models::grid::Grid;
 mod builder;
 use crate::builder::build;
 
-// TODO: fix the spin to work with collision avoidance.
 // TODO: add title screen and score etc.
 // TODO: make the render better.
 
@@ -33,6 +32,7 @@ fn main() {
     let mut cur_tetris = build::build_random_tetris(0, 0);
     let mut next_tetris = build::build_random_tetris(0, 0);
     let mut saved_tetris: Option<Tetris> = None;
+    let mut score = 0;
     let frame_time_millis = 10;
     let duration = Duration::from_millis(frame_time_millis as u64);
     let mut drop_timer = 0;
@@ -79,6 +79,22 @@ fn main() {
                     execute!(stdout, cursor::MoveTo((new_col * 2) as u16, new_row as u16), Print(get_cell(&tet.color))).unwrap();
                 }
             }
+        }
+        // render () score
+        {
+
+            for i in 12..=17 {
+                for j in 11..=12 {
+                    let cell = get_cell(&0);
+                    let row_pos = (2 * i) as u16;
+                    execute!(stdout, cursor::MoveTo(row_pos, j), Print(cell)).unwrap();
+                }
+            }
+            let score_preface = get_text(&"score:", &1);
+            let score_string = get_text(&score.to_string(), &1);
+            execute!(stdout, cursor::MoveTo(13 * 2, 11), Print(score_preface)).unwrap();
+            execute!(stdout, cursor::MoveTo(13 * 2, 12), Print(score_string)).unwrap();
+            
         }
         // render (1,1) to (11,21) is tetris grid.
         {
@@ -210,5 +226,15 @@ fn get_cell(cell: &usize) -> String {
         6 => return format!("{}", cell_uncolored.bright_blue()),
         
         _ => return format!("{}", cell_uncolored.white()),
+    }
+}
+
+fn get_text(text: &str, color: &usize) -> String {
+    match color {
+        // background
+        0 => return format!("{}", text.white().on_blue()),
+        1 => return format!("{}", text.black().on_white()),
+        
+        _ => return format!("{}", text.white()),
     }
 }
