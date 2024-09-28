@@ -36,11 +36,11 @@ fn main() {
     let frame_time_millis = 10;
     let duration = Duration::from_millis(frame_time_millis as u64);
     let mut drop_timer = 0;
-    let drop_time_millis = 100;
+    let drop_time_millis = 300;
     enable_raw_mode().unwrap();
 
     execute!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0)).unwrap();
-    // render border
+    // render background
     {
         for i in 0..=18 {
             for j in 0..=23 {
@@ -61,9 +61,9 @@ fn main() {
                 }
             }
             for row_col in next_tetris.get_tiles() {
-                let new_row = row_col.row + 13;
-                let new_col = row_col.col + 2;
-                execute!(stdout, cursor::MoveTo((new_row * 2) as u16, new_col as u16), Print(get_cell(&next_tetris.color))).unwrap();
+                let new_row = row_col.row + 2;
+                let new_col = row_col.col + 13;
+                execute!(stdout, cursor::MoveTo((new_col * 2) as u16, new_row as u16), Print(get_cell(&next_tetris.color))).unwrap();
             }
             for i in 12..=17 {
                 for j in 6..=9 {
@@ -74,9 +74,9 @@ fn main() {
             }
             if let Some(tet) = &saved_tetris {
                 for row_col in tet.get_tiles() {
-                    let new_row = row_col.row + 13;
-                    let new_col = row_col.col + 7;
-                    execute!(stdout, cursor::MoveTo((new_row * 2) as u16, new_col as u16), Print(get_cell(&tet.color))).unwrap();
+                    let new_row = row_col.row + 7;
+                    let new_col = row_col.col + 13;
+                    execute!(stdout, cursor::MoveTo((new_col * 2) as u16, new_row as u16), Print(get_cell(&tet.color))).unwrap();
                 }
             }
         }
@@ -168,7 +168,7 @@ fn main() {
             next_tetris = build::build_random_tetris(0, 0);
         }
         else if spin != 0 {
-            cur_tetris.spin_tetris(spin);
+            cur_tetris.try_spin_tetris(spin, &grid);
         }
         else if save {
             match saved_tetris {
@@ -185,7 +185,7 @@ fn main() {
                 },
             };
         }
-        else if !cur_tetris.move_tetris(&grid.grid_vec, &shift) {
+        else if !cur_tetris.try_move_or_set_tetris(&grid.grid_vec, &shift) {
             grid.apply_tetris(&cur_tetris);
             cur_tetris = next_tetris;
             next_tetris = build::build_random_tetris(0, 0);
