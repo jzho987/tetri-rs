@@ -6,9 +6,8 @@ pub mod build {
 
     pub fn build_random_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let mut rng = rand::thread_rng();
-        let rand_num: f64 = rng.gen();
-        let rand_num_i = (rand_num * 4.99) as i32;
-        match rand_num_i {
+        let rand_num = rng.gen_range(0..=4);
+        match rand_num {
             0 => build_square_tetris(origin_row, origin_col),
             1 => build_tee_tetris(origin_row, origin_col),
             2 => build_zaa_tetris(origin_row, origin_col),
