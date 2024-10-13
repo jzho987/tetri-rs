@@ -6,13 +6,16 @@ pub mod build {
 
     pub fn build_random_tetris(origin_row: usize, origin_col: usize) -> Tetris {
         let mut rng = rand::thread_rng();
-        let rand_num = rng.gen_range(0..=4);
+        let rand_num = rng.gen_range(0..=6);
         match rand_num {
             0 => build_square_tetris(origin_row, origin_col),
             1 => build_tee_tetris(origin_row, origin_col),
             2 => build_zaa_tetris(origin_row, origin_col),
             3 => build_zee_tetris(origin_row, origin_col),
-            4 => build_long_tetris(origin_row, origin_col),
+            4 => build_laa_tetris(origin_row, origin_col),
+            5 => build_lee_tetris(origin_row, origin_col),
+            6 => build_long_tetris(origin_row, origin_col),
+
             _ => build_zee_tetris(origin_row, origin_col),
         }
     }
@@ -72,6 +75,34 @@ pub mod build {
             ];
 
         Tetris::new(poses, RowCol {row: 0, col: 1}, RowCol {row: origin_row, col: origin_col}, 0, 4)
+    }
+
+    // origin: o->[ ], centre: c->[ ]
+    // o[X], [ ], [ ]
+    //  [X],c[X], [X]
+    fn build_lee_tetris(origin_row: usize, origin_col: usize) -> Tetris {
+        let poses = vec![
+            RowCol {row: origin_row, col: origin_col}, 
+            RowCol {row: origin_row + 1, col: origin_col}, 
+            RowCol {row: origin_row + 1, col: origin_col + 1}, 
+            RowCol {row: origin_row + 1, col: origin_col + 2}, 
+            ];
+
+        Tetris::new(poses, RowCol {row: 1, col: 1}, RowCol {row: origin_row, col: origin_col}, 0, 8)
+    }
+
+    // origin: o->[ ], centre: c->[ ]
+    // o[ ],c[ ], [X]
+    //  [X], [X], [X]
+    fn build_laa_tetris(origin_row: usize, origin_col: usize) -> Tetris {
+        let poses = vec![
+            RowCol {row: origin_row, col: origin_col + 2}, 
+            RowCol {row: origin_row + 1, col: origin_col}, 
+            RowCol {row: origin_row + 1, col: origin_col + 1}, 
+            RowCol {row: origin_row + 1, col: origin_col + 2}, 
+            ];
+
+        Tetris::new(poses, RowCol {row: 1, col: 1}, RowCol {row: origin_row, col: origin_col}, 0, 9)
     }
 
     // origin: o->[ ], centre: c->[ ]
